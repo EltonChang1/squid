@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+Fast DDS (ROS 2 Humble default RMW) tuning for the Tactile-UMI collection host.
+
+Why this exists (measured in the sim E2E, see docs/verification.md):
+  * Fast DDS' default reliable-writer heartbeat period is 3 s. A dropped
+    datagram on a 1 kHz RELIABLE topic is only repaired after the next
+    heartbeat, so the subscriber sees nothing for up to seconds and then a
+    burst of ~1000 late samples. The recorder's alignment gate then compares
+    images against stale references and drops them.
+  * The default SHM segment (512 KiB) is smaller than a 640x480 bgr8 Image
+    (921 KiB), so images fall back to UDP loopback fragmented into 64 KiB
+    datagrams with the kernel default 208 KiB socket buffer: bursty loss.
+
+Settings:
+  * heartbeat 10 ms / immediate ACKNACK: repairs happen within ~10-20 ms.
+  * 64 MiB SHM segment with a deep port queue: all topics stay on shared
+    memory, no fragmentation or socket buffers involved.
+  * UDP kept as fallback with 16 MiB buffers, loopback only (the container has
+    no peers; on the Jetson this also keeps DDS traffic off the LAN).
+
+Activated through FASTRTPS_DEFAULT_PROFILES_FILE (see docker-compose.yml and
+docker/entrypoint.sh). Profiles marked is_default_profile are picked up by
+rmw_fastrtps as the base QoS; ROS QoS (reliability/history/depth) is still
+applied on top, so this file never changes topic compatibility.
+-->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+  <transport_descriptors>
+    <transport_descriptor>
+      <transport_id>tactile_umi_shm</transport_id>
+      <type>SHM</type>
+      <maxMessageSize>2097152</maxMessageSize>
+      <segment_size>134217728</segment_size>
+      <port_queue_capacity>2048</port_queue_capacity>
+      <healthy_check_timeout_ms>1000</healthy_check_timeout_ms>
+    </transport_descriptor>
+    <transport_descriptor>
+      <transport_id>tactile_umi_udp</transport_id>
+      <type>UDPv4</type>
+      <sendBufferSize>16777216</sendBufferSize>
+      <receiveBufferSize>16777216</receiveBufferSize>
+      <interfaceWhiteList>
+        <address>127.0.0.1</address>
+      </interfaceWhiteList>
+    </transport_descriptor>
+  </transport_descriptors>
+
+  <participant profile_name="tactile_umi_participant" is_default_profile="true">
+    <rtps>
+      <useBuiltinTransports>false</useBuiltinTransports>
+      <userTransports>
+        <transport_id>tactile_umi_shm</transport_id>
+        <transport_id>tactile_umi_udp</transport_id>
+      </userTransports>
+    </rtps>
+  </participant>
+
+  <publisher profile_name="tactile_umi_publisher" is_default_profile="true">
+    <times>
+      <initialHeartbeatDelay>
+        <sec>0</sec>
+        <nanosec>1000000</nanosec>
+      </initialHeartbeatDelay>
+      <heartbeatPeriod>
+        <sec>0</sec>
+        <nanosec>10000000</nanosec>
+      </heartbeatPeriod>
+      <nackResponseDelay>
+        <sec>0</sec>
+        <nanosec>0</nanosec>
+      </nackResponseDelay>
+      <nackSupressionDuration>
+        <sec>0</sec>
+        <nanosec>0</nanosec>
+      </nackSupressionDuration>
+    </times>
+  </publisher>
+
+  <subscriber profile_name="tactile_umi_subscriber" is_default_profile="true">
+    <times>
+      <initialAcknackDelay>
+        <sec>0</sec>
+        <nanosec>1000000</nanosec>
+      </initialAcknackDelay>
+      <heartbeatResponseDelay>
+        <sec>0</sec>
+        <nanosec>0</nanosec>
+      </heartbeatResponseDelay>
+    </times>
+  </subscriber>
+</profiles>

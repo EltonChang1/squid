@@ -1,0 +1,27 @@
+services:
+  ros:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: tactile-umi/ros:humble
+    working_dir: /ws
+    volumes:
+      - ..:/ws
+      - ../data:/data
+    # Fast DDS shared-memory segments live in /dev/shm; Docker's 64 MB default
+    # cannot hold the 128 MiB segment per participant configured in
+    # fastdds_profile.xml (needed so 921 KiB images never fall back to UDP).
+    shm_size: 1gb
+    environment:
+      - ROS_DOMAIN_ID=42
+      # Transport (loopback whitelist, SHM segment size, socket buffers) and
+      # reliable-writer heartbeat timing. ROS_LOCALHOST_ONLY is intentionally
+      # not set: it would replace the transports configured in this file.
+      - FASTRTPS_DEFAULT_PROFILES_FILE=/ws/docker/fastdds_profile.xml
+    stdin_open: true
+    tty: true
+    # For real hardware on a Linux host uncomment:
+    # privileged: true
+    # devices:
+    #   - /dev/ttyACM0:/dev/ttyACM0
+    #   - /dev/video0:/dev/video0

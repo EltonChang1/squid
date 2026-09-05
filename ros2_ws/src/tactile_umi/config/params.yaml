@@ -1,0 +1,45 @@
+visuo_tactile_publisher:
+  ros__parameters:
+    sim: false
+    # V4L2 device indices (check `v4l2-ctl --list-devices`).
+    left_camera_device: 0
+    right_camera_device: 2
+    wrist_camera_device: 4
+    enable_wrist_camera: true
+    tactile_width: 640
+    tactile_height: 480
+    tactile_fps: 120.0
+    wrist_width: 1920
+    wrist_height: 1080
+    wrist_fps: 60.0
+    serial_port: /dev/ttyACM0
+    serial_baud: 115200
+    # width_m = encoder_width_scale * angle_rad + encoder_width_offset
+    # Default assumes an 8 mm pitch-radius pinion driving the jaw rack and the
+    # encoder zeroed with the jaws closed. Re-fit with two measurements using
+    # EncoderCalibration.from_two_points().
+    encoder_width_scale: 0.008
+    encoder_width_offset: 0.0
+    gripper_max_width: 0.085
+    # Sim-only fault injection
+    sim_camera_jitter_ms: 0.0
+    sim_serial_stall_every: 0
+    sim_serial_stall_ms: 0.0
+    sim_pose_rate: 200.0
+
+sync_monitor:
+  ros__parameters:
+    publish_rate: 10.0
+    ok_offset_ms: 1.0      # blueprint: image/wrench stamps align within < 1 ms
+    warn_offset_ms: 2.0
+    stale_ms: 500.0
+    optional_topics: ['/pose/end_effector', '/wrist/image_raw']
+
+mcap_recorder:
+  ros__parameters:
+    session_root: /data/sessions
+    bag_name: trajectory
+    max_jitter_ms: 2.0     # blueprint: drop frames where jitter exceeds 2.0 ms
+    drop_without_reference: true
+    gate_images: true
+    storage_preset: zstd_fast

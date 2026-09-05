@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# ROS 2 / colcon
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Firmware
+firmware/build/
+firmware/build-host/
+firmware/pico-sdk/
+
+# CAD renders
+cad/stl/
+
+# Recorded data
+data/
+sessions/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
