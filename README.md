@@ -1,6 +1,6 @@
 # Squid
 
-Software and CAD for a handheld parallel-jaw gripper that records synchronized visuo-tactile data: two GelSight-style fingers (120 fps), a 6-axis wrist force/torque sensor and jaw-width encoder (1 kHz), and a wrist camera (60 fps). Streams go through ROS 2 Humble and land in MCAP.
+Software and CAD for a handheld parallel-jaw gripper that records synchronized visuo-tactile data: two GelSight-style fingers (120 fps), a 6-axis wrist force/torque sensor and jaw-width encoder (1 kHz), and a wrist camera (60 fps). Streams go through ROS 2 Humble and land in MCAP. potential improvement would be getting a touchtronix fushionx to collect magnetic tactile data
 
 Full specification: [blueprint.html](blueprint.html).
 
